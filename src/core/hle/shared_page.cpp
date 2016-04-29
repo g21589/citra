@@ -4,14 +4,14 @@
 
 #include <cstring>
 #include <ctime>
-#include <core/core_timing.h>
 
+#include "core/core_timing.h"
 #include "core/hle/shared_page.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // 3DS Uses 1900 for Epoch instead of 1970
-#define _3DS_EPOCH_OFFSET 2208988800L
+static constexpr u64_le console_epoch_offset = 2208988800ULL;
 
 namespace SharedPage {
 
@@ -37,7 +37,7 @@ static void UpdateTimeCallback(u64 /*userdata*/, int /*cycles_late*/) {
 
     // 3DS uses 1/1/1900 for Epoch
     time_t plat_time = std::time(nullptr);
-    u64_le console_time = (static_cast<u64_le>(plat_time) + _3DS_EPOCH_OFFSET) * 1000L;
+    u64_le console_time = (static_cast<u64_le>(plat_time) + console_epoch_offset) * 1000L;
 
     DateTime* current_time = (next_count & 1) ? &shared_page.date_time_1 : &shared_page.date_time_0;
 
