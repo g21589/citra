@@ -46,7 +46,7 @@ static void UpdateTimeCallback(u64 /*userdata*/, int /*cycles_late*/) {
     current_time->update_tick = CoreTiming::GetTicks();
 
     // run again in an hour
-    CoreTiming::ScheduleEvent((u64_le)CoreTiming::GetClockFrequency() * 360ULL, update_time_event);
+    CoreTiming::ScheduleEvent((u64_le)CoreTiming::GetClockFrequency() * 3600ULL, update_time_event);
 }
 
 } // namespace
