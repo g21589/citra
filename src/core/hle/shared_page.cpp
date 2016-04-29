@@ -33,17 +33,20 @@ void Init() {
 }
 
 static void UpdateTimeCallback(u64 /*userdata*/, int /*cycles_late*/) {
-    shared_page.date_time_update_counter++;
+    u32_le next_count = shared_page.date_time_update_counter + 1;
 
     // 3DS uses 1/1/1900 for Epoch
     time_t plat_time = std::time(nullptr);
     u64_le console_time = (static_cast<u64_le>(plat_time) + _3DS_EPOCH_OFFSET) * 1000L;
 
-    DateTime* current_time = (shared_page.date_time_update_counter & 1) ? &shared_page.date_time_1 : &shared_page.date_time_0;
+    DateTime* current_time = (next_count & 1) ? &shared_page.date_time_1 : &shared_page.date_time_0;
 
     current_time->date_time = console_time;
     current_time->tick_rate = (u64_le)CoreTiming::GetClockFrequency();
     current_time->update_tick = CoreTiming::GetTicks();
+
+    // update after changing the opposite time structure to keep updates atomic
+    shared_page.date_time_update_counter = next_count;
 
     // run again in an hour
     CoreTiming::ScheduleEvent((u64_le)CoreTiming::GetClockFrequency() * 3600ULL, update_time_event);
