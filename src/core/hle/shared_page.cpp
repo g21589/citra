@@ -11,7 +11,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // 3DS Uses 1900 for Epoch instead of 1970
-#define _3DS_EPOCH_OFFSET 3155673600L
+#define _3DS_EPOCH_OFFSET 2208988800L
 
 namespace SharedPage {
 
@@ -37,9 +37,7 @@ static void UpdateTimeCallback(u64 /*userdata*/, int /*cycles_late*/) {
 
     // 3DS uses 1/1/1900 for Epoch
     time_t plat_time = std::time(nullptr);
-    tm console_epoch = {};
-    console_epoch.tm_year = 100; // 2000
-    u64_le console_time = (static_cast<u64_le>(std::difftime(plat_time, std::mktime(&console_epoch))) + _3DS_EPOCH_OFFSET) * 1000L;
+    u64_le console_time = (static_cast<u64_le>(plat_time) + _3DS_EPOCH_OFFSET) * 1000L;
 
     DateTime* current_time = (shared_page.date_time_update_counter & 1) ? &shared_page.date_time_1 : &shared_page.date_time_0;
 
