@@ -577,8 +577,18 @@ struct Regs {
         }
     }
 
-    struct {
-        INSERT_PADDING_WORDS(0x6);
+    struct FramebufferConfig {
+        INSERT_PADDING_WORDS(0x3);
+
+        union {
+            BitField<0, 4, u32> allow_color_write; // 0 = disable, else enable
+        };
+
+        INSERT_PADDING_WORDS(0x1);
+
+        union {
+            BitField<0, 2, u32> allow_depth_stencil_write; // 0 = disable, else enable
+        };
 
         DepthFormat depth_format; // TODO: Should be a BitField!
         BitField<16, 3, ColorFormat> color_format;
@@ -737,8 +747,13 @@ struct Regs {
         case LightingSampler::ReflectGreen:
         case LightingSampler::ReflectBlue:
             return (config == LightingConfig::Config4) || (config == LightingConfig::Config5) || (config == LightingConfig::Config7);
+        default:
+            UNREACHABLE_MSG("Regs::IsLightingSamplerSupported: Reached "
+                            "unreachable section, sampler should be one "
+                            "of Distribution0, Distribution1, Fresnel, "
+                            "ReflectRed, ReflectGreen or ReflectBlue, instead "
+                            "got %i", static_cast<int>(config));
         }
-        return false;
     }
 
     struct {

@@ -114,7 +114,15 @@ public:
      * @param event Event which has happened
      * @param data Optional data pointer (pass nullptr if unused). Needs to remain valid until Resume() is called.
      */
-    void OnEvent(Event event, void* data);
+    void OnEvent(Event event, void* data) {
+        // This check is left in the header to allow the compiler to inline it.
+        if (!breakpoints[(int)event].enabled)
+            return;
+        // For the rest of event handling, call a separate function.
+        DoOnEvent(event, data);
+    }
+
+    void DoOnEvent(Event event, void *data);
 
     /**
      * Resume from the current breakpoint.
@@ -126,12 +134,14 @@ public:
      * Delete all set breakpoints and resume emulation.
      */
     void ClearBreakpoints() {
-        breakpoints.clear();
+        for (auto &bp : breakpoints) {
+            bp.enabled = false;
+        }
         Resume();
     }
 
     // TODO: Evaluate if access to these members should be hidden behind a public interface.
-    std::map<Event, BreakPoint> breakpoints;
+    std::array<BreakPoint, (int)Event::NumEvents> breakpoints;
     Event active_breakpoint;
     bool at_breakpoint = false;
 
@@ -158,29 +168,8 @@ extern std::shared_ptr<DebugContext> g_debug_context; // TODO: Get rid of this g
 
 namespace DebugUtils {
 
-#define PICA_DUMP_GEOMETRY 0
 #define PICA_DUMP_TEXTURES 0
 #define PICA_LOG_TEV 0
-
-// Simple utility class for dumping geometry data to an OBJ file
-class GeometryDumper {
-public:
-    struct Vertex {
-        std::array<float,3> pos;
-    };
-
-    void AddTriangle(Vertex& v0, Vertex& v1, Vertex& v2);
-
-    void Dump();
-
-private:
-    struct Face {
-        int index[3];
-    };
-
-    std::vector<Vertex> vertices;
-    std::vector<Face> faces;
-};
 
 void DumpShader(const std::string& filename, const Regs::ShaderConfig& config,
                 const Shader::ShaderSetup& setup, const Regs::VSOutputAttributes* output_attributes);

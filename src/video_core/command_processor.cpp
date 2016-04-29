@@ -7,7 +7,6 @@
 
 #include "common/alignment.h"
 #include "common/microprofile.h"
-#include "common/profiler.h"
 
 #include "core/settings.h"
 #include "core/hle/service/gsp_gpu.h"
@@ -34,8 +33,6 @@ static u32 uniform_write_buffer[4];
 static int default_attr_counter = 0;
 
 static u32 default_attr_write_buffer[3];
-
-Common::Profiling::TimingCategory category_drawing("Drawing");
 
 // Expand a 4-bit mask to 4-byte mask, e.g. 0b0101 -> 0x00FF00FF
 static const u32 expand_bits_to_bytes[] = {
@@ -140,7 +137,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                         immediate_attribute_id = 0;
 
                         Shader::UnitState<false> shader_unit;
-                        Shader::Setup(shader_unit);
+                        Shader::Setup();
 
                         if (g_debug_context)
                             g_debug_context->OnEvent(DebugContext::Event::VertexLoaded, static_cast<void*>(&immediate_input));
@@ -186,7 +183,6 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         case PICA_REG_INDEX(trigger_draw):
         case PICA_REG_INDEX(trigger_draw_indexed):
         {
-            Common::Profiling::ScopeTimer scope_timer(category_drawing);
             MICROPROFILE_SCOPE(GPU_Drawing);
 
 #if PICA_LOG_TEV
@@ -249,10 +245,6 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             const u16* index_address_16 = reinterpret_cast<const u16*>(index_address_8);
             bool index_u16 = index_info.format != 0;
 
-#if PICA_DUMP_GEOMETRY
-            DebugUtils::GeometryDumper geometry_dumper;
-            PrimitiveAssembler<DebugUtils::GeometryDumper::Vertex> dumping_primitive_assembler(regs.triangle_topology.Value());
-#endif
             PrimitiveAssembler<Shader::OutputVertex>& primitive_assembler = g_state.primitive_assembler;
 
             if (g_debug_context) {
@@ -304,7 +296,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             vertex_cache_ids.fill(-1);
 
             Shader::UnitState<false> shader_unit;
-            Shader::Setup(shader_unit);
+            Shader::Setup();
 
             for (unsigned int index = 0; index < regs.num_vertices; ++index)
             {
@@ -388,17 +380,6 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                     if (g_debug_context)
                         g_debug_context->OnEvent(DebugContext::Event::VertexLoaded, (void*)&input);
 
-#if PICA_DUMP_GEOMETRY
-                    // NOTE: When dumping geometry, we simply assume that the first input attribute
-                    //       corresponds to the position for now.
-                    DebugUtils::GeometryDumper::Vertex dumped_vertex = {
-                        input.attr[0][0].ToFloat32(), input.attr[0][1].ToFloat32(), input.attr[0][2].ToFloat32()
-                    };
-                    using namespace std::placeholders;
-                    dumping_primitive_assembler.SubmitVertex(dumped_vertex,
-                                                             std::bind(&DebugUtils::GeometryDumper::AddTriangle,
-                                                                       &geometry_dumper, _1, _2, _3));
-#endif
                     // Send to vertex shader
                     output = Shader::Run(shader_unit, input, attribute_config.GetNumTotalAttributes());
 
@@ -423,10 +404,6 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 g_debug_context->recorder->MemoryAccessed(Memory::GetPhysicalPointer(range.first),
                                                           range.second, range.first);
             }
-
-#if PICA_DUMP_GEOMETRY
-            geometry_dumper.Dump();
-#endif
 
             break;
         }

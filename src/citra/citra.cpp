@@ -5,6 +5,7 @@
 #include <string>
 #include <thread>
 #include <iostream>
+#include <memory>
 
 // This needs to be included before getopt.h because the latter #defines symbols used by it
 #include "common/microprofile.h"
@@ -19,7 +20,7 @@
 #include "common/logging/log.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
-#include "common/make_unique.h"
+#include "common/scm_rev.h"
 #include "common/scope_exit.h"
 
 #include "core/settings.h"
@@ -34,26 +35,54 @@
 #include "video_core/video_core.h"
 
 
-static void PrintHelp()
+static void PrintHelp(const char *argv0)
 {
-    std::cout << "Usage: citra <filename>" << std::endl;
+    std::cout << "Usage: " << argv0 << " [options] <filename>\n"
+                 "-g, --gdbport=NUMBER  Enable gdb stub on port NUMBER\n"
+                 "-h, --help            Display this help and exit\n"
+                 "-v, --version         Output version information and exit\n";
+}
+
+static void PrintVersion()
+{
+    std::cout << "Citra " << Common::g_scm_branch << " " << Common::g_scm_desc << std::endl;
 }
 
 /// Application entry point
 int main(int argc, char **argv) {
+    Config config;
     int option_index = 0;
+    bool use_gdbstub = Settings::values.use_gdbstub;
+    u32 gdb_port = static_cast<u32>(Settings::values.gdbstub_port);
+    char *endarg;
     std::string boot_filename;
+
     static struct option long_options[] = {
+        { "gdbport", required_argument, 0, 'g' },
         { "help", no_argument, 0, 'h' },
+        { "version", no_argument, 0, 'v' },
         { 0, 0, 0, 0 }
     };
 
     while (optind < argc) {
-        char arg = getopt_long(argc, argv, ":h", long_options, &option_index);
+        char arg = getopt_long(argc, argv, "g:hv", long_options, &option_index);
         if (arg != -1) {
             switch (arg) {
+            case 'g':
+                errno = 0;
+                gdb_port = strtoul(optarg, &endarg, 0);
+                use_gdbstub = true;
+                if (endarg == optarg) errno = EINVAL;
+                if (errno != 0) {
+                    perror("--gdbport");
+                    exit(1);
+                }
+                break;
             case 'h':
-                PrintHelp();
+                PrintHelp(argv[0]);
+                return 0;
+            case 'v':
+                PrintVersion();
                 return 0;
             }
         } else {
@@ -73,16 +102,14 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    Config config;
     log_filter.ParseFilterString(Settings::values.log_filter);
 
-    GDBStub::ToggleServer(Settings::values.use_gdbstub);
-    GDBStub::SetServerPort(static_cast<u32>(Settings::values.gdbstub_port));
+    // Apply the command line arguments
+    Settings::values.gdbstub_port = gdb_port;
+    Settings::values.use_gdbstub = use_gdbstub;
+    Settings::Apply();
 
-    std::unique_ptr<EmuWindow_SDL2> emu_window = Common::make_unique<EmuWindow_SDL2>();
-
-    VideoCore::g_hw_renderer_enabled = Settings::values.use_hw_renderer;
-    VideoCore::g_shader_jit_enabled = Settings::values.use_shader_jit;
+    std::unique_ptr<EmuWindow_SDL2> emu_window = std::make_unique<EmuWindow_SDL2>();
 
     System::Init(emu_window.get());
     SCOPE_EXIT({ System::Shutdown(); });

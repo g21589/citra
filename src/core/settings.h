@@ -55,6 +55,7 @@ struct Values {
     // Renderer
     bool use_hw_renderer;
     bool use_shader_jit;
+    bool use_scaled_resolution;
 
     float bg_red;
     float bg_green;
@@ -66,5 +67,7 @@ struct Values {
     bool use_gdbstub;
     u16 gdbstub_port;
 } extern values;
+
+void Apply();
 
 }

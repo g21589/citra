@@ -7,7 +7,6 @@
 #include <memory>
 
 #include "common/logging/log.h"
-#include "common/make_unique.h"
 #include "common/string_util.h"
 #include "common/swap.h"
 
@@ -175,7 +174,7 @@ ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>&
         return ResultStatus::Error;
 
     LOG_DEBUG(Loader, "%d sections:", kMaxSections);
-    // Iterate through the ExeFs archive until we find the .code file...
+    // Iterate through the ExeFs archive until we find a section with the specified name...
     for (unsigned section_number = 0; section_number < kMaxSections; section_number++) {
         const auto& section = exefs_header.section[section_number];
 
@@ -187,7 +186,7 @@ ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>&
             s64 section_offset = (section.offset + exefs_offset + sizeof(ExeFs_Header) + ncch_offset);
             file.Seek(section_offset, SEEK_SET);
 
-            if (is_compressed) {
+            if (strcmp(section.name, ".code") == 0 && is_compressed) {
                 // Section is compressed, read compressed .code section...
                 std::unique_ptr<u8[]> temp_buffer;
                 try {
@@ -256,7 +255,7 @@ ResultStatus AppLoader_NCCH::Load() {
     resource_limit_category = exheader_header.arm11_system_local_caps.resource_limit_category;
 
     LOG_INFO(Loader,  "Name:                        %s"    , exheader_header.codeset_info.name);
-    LOG_INFO(Loader,  "Program ID:                  %016X" , ncch_header.program_id);
+    LOG_INFO(Loader,  "Program ID:                  %016llX" , ncch_header.program_id);
     LOG_DEBUG(Loader, "Code compressed:             %s"    , is_compressed ? "yes" : "no");
     LOG_DEBUG(Loader, "Entry point:                 0x%08X", entry_point);
     LOG_DEBUG(Loader, "Code size:                   0x%08X", code_size);
