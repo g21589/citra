@@ -22,8 +22,6 @@ static int update_time_event;   ///< Time is updated/swapped every hour
 void Init() {
     std::memset(&shared_page, 0, sizeof(shared_page));
 
-    shared_page.date_time_update_counter = 1;
-
     // Some games wait until this value becomes 0x1, before asking running_hw
     shared_page.unknown_value = 0x1;
 
