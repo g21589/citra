@@ -2,8 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <tuple>
+
 #include "common/assert.h"
 
+#include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/server_port.h"
 #include "core/hle/kernel/thread.h"
@@ -28,6 +31,13 @@ bool ServerPort::ShouldWait() {
 
 void ServerPort::Acquire() {
     ASSERT_MSG(!ShouldWait(), "object unavailable!");
+}
+
+std::tuple<SharedPtr<ServerPort>, SharedPtr<ClientPort>> ServerPort::CreatePortPair(u32 max_sessions, std::string name) {
+    auto server_port = ServerPort::Create(name + "Server").MoveFrom();
+    auto client_port = ClientPort::Create(server_port, max_sessions, name + "Client").MoveFrom();
+
+    return std::make_tuple(server_port, client_port);
 }
 
 } // namespace
