@@ -16,14 +16,6 @@ namespace Kernel {
 ServerPort::ServerPort() {}
 ServerPort::~ServerPort() {}
 
-ResultVal<SharedPtr<ServerPort>> ServerPort::Create(std::string name) {
-    SharedPtr<ServerPort> server_port(new ServerPort);
-
-    server_port->name = std::move(name);
-
-    return MakeResult<SharedPtr<ServerPort>>(std::move(server_port));
-}
-
 bool ServerPort::ShouldWait() {
     // If there are no pending sessions, we wait until a new one is added.
     return pending_sessions.size() == 0;
@@ -34,10 +26,16 @@ void ServerPort::Acquire() {
 }
 
 std::tuple<SharedPtr<ServerPort>, SharedPtr<ClientPort>> ServerPort::CreatePortPair(u32 max_sessions, std::string name) {
-    auto server_port = ServerPort::Create(name + "Server").MoveFrom();
-    auto client_port = ClientPort::Create(server_port, max_sessions, name + "Client").MoveFrom();
+    SharedPtr<ServerPort> server_port(new ServerPort);
+    SharedPtr<ClientPort> client_port(new ClientPort);
 
-    return std::make_tuple(server_port, client_port);
+    server_port->name = name + "_Server";
+    client_port->name = name + "_Client";
+    client_port->server_port = server_port;
+    client_port->max_sessions = max_sessions;
+    client_port->active_sessions = 0;
+
+    return std::make_tuple(std::move(server_port), std::move(client_port));
 }
 
 } // namespace

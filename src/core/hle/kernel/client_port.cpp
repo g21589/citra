@@ -13,15 +13,4 @@ namespace Kernel {
 ClientPort::ClientPort() {}
 ClientPort::~ClientPort() {}
 
-ResultVal<SharedPtr<ClientPort>> ClientPort::Create(SharedPtr<ServerPort> server_port, u32 max_sessions, std::string name) {
-    SharedPtr<ClientPort> client_port(new ClientPort);
-
-    client_port->server_port = server_port;
-    client_port->max_sessions = max_sessions;
-    client_port->active_sessions = 0;
-    client_port->name = std::move(name);
-
-    return MakeResult<SharedPtr<ClientPort>>(std::move(client_port));
-}
-
 } // namespace

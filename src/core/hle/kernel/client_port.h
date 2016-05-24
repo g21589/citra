@@ -12,19 +12,9 @@
 
 namespace Kernel {
 
-class ServerPort;
-
-class ClientPort final : public Object {
+class ClientPort : public Object {
 public:
-    /**
-     * Creates a client port.
-     * @param server_port ServerPort associated with this client port.
-     * @param max_sessions Maximum number of sessions to this port
-     * @param name Optional name of client port
-     * @return The created client port
-     */
-    static ResultVal<SharedPtr<ClientPort>> Create(SharedPtr<ServerPort> server_port, u32 max_sessions, std::string name = "Unknown");
-
+    friend class ServerPort;
     std::string GetTypeName() const override { return "ClientPort"; }
     std::string GetName() const override { return name; }
 
@@ -36,7 +26,7 @@ public:
     u32 active_sessions;                        ///< Number of currently open sessions to this port
     std::string name;                           ///< Name of client port (optional)
 
-private:
+protected:
     ClientPort();
     ~ClientPort() override;
 };
