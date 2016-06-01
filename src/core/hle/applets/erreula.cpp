@@ -21,9 +21,9 @@ ResultCode ErrEula::ReceiveParameter(const Service::APT::MessageParameter& param
     // The LibAppJustStarted message contains a buffer with the size of the framebuffer shared memory.
     // Create the SharedMemory that will hold the framebuffer data
     Service::APT::CaptureBufferInfo capture_info;
-    ASSERT(sizeof(capture_info) == parameter.buffer_size);
+    ASSERT(sizeof(capture_info) == parameter.buffer.size());
 
-    memcpy(&capture_info, parameter.data, sizeof(capture_info));
+    memcpy(&capture_info, parameter.buffer.data(), sizeof(capture_info));
 
     // TODO: allocated memory never released
     using Kernel::MemoryPermission;
@@ -37,8 +37,7 @@ ResultCode ErrEula::ReceiveParameter(const Service::APT::MessageParameter& param
     // Send the response message with the newly created SharedMemory
     Service::APT::MessageParameter result;
     result.signal = static_cast<u32>(Service::APT::SignalType::LibAppFinished);
-    result.data = nullptr;
-    result.buffer_size = 0;
+    result.buffer.clear();
     result.destination_id = static_cast<u32>(Service::APT::AppletId::Application);
     result.sender_id = static_cast<u32>(id);
     result.object = framebuffer_memory;
@@ -53,12 +52,10 @@ ResultCode ErrEula::StartImpl(const Service::APT::AppletStartupParameter& parame
     // TODO(Subv): Set the expected fields in the response buffer before resending it to the application.
     // TODO(Subv): Reverse the parameter format for the ErrEula applet
 
-    memset(parameter.data, 0, sizeof(parameter.buffer_size));
-
     // Let the application know that we're closing
     Service::APT::MessageParameter message;
-    message.buffer_size = parameter.buffer_size;
-    message.data = parameter.data;
+    message.buffer.resize(parameter.buffer.size());
+    std::fill(message.buffer.begin(), message.buffer.end(), 0);
     message.signal = static_cast<u32>(Service::APT::SignalType::LibAppClosed);
     message.destination_id = static_cast<u32>(Service::APT::AppletId::Application);
     message.sender_id = static_cast<u32>(id);
