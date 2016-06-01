@@ -24,6 +24,7 @@ set(SRCS
             configure_debug.cpp
             configure_dialog.cpp
             configure_general.cpp
+            configure_system.cpp
             game_list.cpp
             hotkeys.cpp
             main.cpp
@@ -56,6 +57,7 @@ set(HEADERS
             configure_debug.h
             configure_dialog.h
             configure_general.h
+            configure_system.h
             game_list.h
             game_list_p.h
             hotkeys.h
@@ -74,6 +76,7 @@ set(UIS
             configure_audio.ui
             configure_debug.ui
             configure_general.ui
+            configure_system.ui
             hotkeys.ui
             main.ui
             )
