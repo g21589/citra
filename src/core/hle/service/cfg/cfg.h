@@ -264,11 +264,57 @@ ResultCode UpdateConfigNANDSavegame();
  */
 ResultCode FormatConfig();
 
+/**
+ * Open the config savegame file and load it to the memory buffer
+ * @returns ResultCode indicating the result of the operation, 0 on success
+ */
+ResultCode LoadConfigNANDSaveFile();
+
 /// Initialize the config service
 void Init();
 
 /// Shutdown the config service
 void Shutdown();
+
+// Utility functions for frontend to set config data
+// Note: before calling these functions, LoadConfigNANDSaveFile should be called.
+
+/**
+ * Sets the username in config savegame.
+ * @param name the username to be set. The maximum size is 10 in char16_t.
+ */
+void SetUsername(std::u16string name);
+
+/**
+ * Gets the username from config savegame.
+ * @returns the username
+ */
+std::u16string GetUsername();
+
+/**
+ * Sets the profile birthday in config savegame.
+ * @param month the month of birthday.
+ * @param day the day of the birthday.
+ */
+void SetBirthday(u8 month, u8 day);
+
+/**
+ * Gets the profile birthday from the config savegame.
+ * @returns a tuple of (month, day) of birthday
+ */
+std::tuple<u8, u8> GetBirthday();
+
+/**
+ * Sets the system language in config savegame.
+ * @param language the system language to be set.
+ */
+void SetSystemLanguage(SystemLanguage language);
+
+/**
+ * Gets the system language in config savegame.
+ * @returns the system language
+ */
+SystemLanguage GetSystemLanguage();
 
 } // namespace CFG
 } // namespace Service
