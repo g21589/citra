@@ -18,6 +18,7 @@
 #include "citra_qt/bootmanager.h"
 #include "citra_qt/config.h"
 #include "citra_qt/configure_dialog.h"
+#include "citra_qt/crash_handler.h"
 #include "citra_qt/game_list.h"
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/main.h"
@@ -561,6 +562,8 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
 #endif
 
 int main(int argc, char* argv[]) {
+    CrashHandler::Register();
+
     Log::Filter log_filter(Log::Level::Info);
     Log::SetFilter(&log_filter);
 
