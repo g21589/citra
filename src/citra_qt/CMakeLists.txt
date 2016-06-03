@@ -24,6 +24,7 @@ set(SRCS
             configure_debug.cpp
             configure_dialog.cpp
             configure_general.cpp
+            crash_handler.cpp
             game_list.cpp
             hotkeys.cpp
             main.cpp
@@ -56,6 +57,7 @@ set(HEADERS
             configure_debug.h
             configure_dialog.h
             configure_general.h
+            crash_handler.h
             game_list.h
             game_list_p.h
             hotkeys.h
